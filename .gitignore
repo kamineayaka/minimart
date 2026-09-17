@@ -2,9 +2,6 @@ HELP.md
 .env
 .env.*
 !.env.example
-*.local.yaml
-application-local.yaml
-application-dev.yaml
 .gradle
 build/
 **/build/

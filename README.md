@@ -19,4 +19,16 @@ Gradle 多模块单体：`app` 负责启动与配置，`modules/*` 为业务边�
 
 健康检查：`http://localhost:8080/actuator/health`
 
-数据库配置：复制 `app/src/main/resources/application-dev.yaml.example` 为 `application-dev.yaml`（该文件已 gitignore），或通过环境变量 `DB_HOST`、`DB_USERNAME`、`DB_PASSWORD` 注入。
+配置 profile（`application.yaml` 默认 `dev`）：
+
+| Profile | 用途 |
+|---------|------|
+| `dev` | 连 MySQL + Flyway；通过环境变量 `DB_HOST`、`DB_USERNAME`、`DB_PASSWORD` 注入密码 |
+| `local` | 不连库，仅起 Web；`--args="--spring.profiles.active=local"` |
+
+```powershell
+$env:DB_HOST="虚拟机IP"; $env:DB_PASSWORD="密码"
+.\gradlew.bat :app:bootRun
+
+.\gradlew.bat :app:bootRun --args="--spring.profiles.active=local"
+```
