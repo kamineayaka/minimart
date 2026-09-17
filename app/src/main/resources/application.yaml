@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: minimart
+
+  # 默认激活的环境：dev=连虚拟机 MySQL；local=本机/无库调试
+  profiles:
+    active: dev
+
+server:
+  port: 8080
+
+# Actuator（骨架阶段只暴露 health）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# MyBatis-Plus（全局，各模块 Mapper 共用）
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  # Mapper XML 若放在各模块，可后续再开：
+  # mapper-locations: classpath*:/mapper/**/*.xml
+
+logging:
+  level:
+    root: INFO
+    com.minimart: DEBUG
+    com.baomidou.mybatisplus: DEBUG
