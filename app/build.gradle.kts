@@ -29,7 +29,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-jdbc")
 	implementation("org.springframework.boot:spring-boot-starter-flyway")
 	runtimeOnly("com.mysql:mysql-connector-j")
-	implementation("com.baomidou:mybatis-plus-spring-boot3-starter:3.5.17")
+	implementation("com.baomidou:mybatis-plus-spring-boot4-starter:3.5.17")
 }
 
 tasks.withType<Test> {
