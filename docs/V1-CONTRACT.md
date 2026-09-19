@@ -1,18 +1,18 @@
 # MiniMart v1 契约
 
-本文件约束 **v1 行为**：做什么、不做什么、状态怎么迁、哪些情况必须成立。用语以根目录 [CONTEXT.md](../CONTEXT.md) 为准。模块谁拥有什么见 [MODULES.md](MODULES.md)。
+本文件约束 **v1 行为**：做什么、不做什么、状态怎么迁、哪些情况必须成立。用语以根目录 [CONTEXT.md](../CONTEXT.md) 为准。谁拥有什么见 [ARCHITECTURE.md](ARCHITECTURE.md)。
 
 这是交易系统的契约，不是湖仓表结构，也不是接口清单。
 
 ## 本仓库的位置
 
-MiniMart 是 B/S 电商的系统源。`minimart-lake` 将来消费本店产生的订单变化，但 **写模型按电商常用形态设计**，不按湖仓当前的一单一 SKU 事件来压扁 Order。入湖映射未定，v1 不依赖 Kafka。
+MiniMart 是 B/S 电商的系统源。`minimart-lake` 将来消费本店产生的订单变化，但 **写模型按电商常用形态设计**，不按湖仓当前的一单一 SKU 事件来压扁 Order。出湖走 Kafka，映射见 [LAKE-EVENTS.md](LAKE-EVENTS.md)（尚未实现）。部署形态见 [ADR-0005](adr/0005-spring-cloud-nacos.md)。
 
 ## 做与不做
 
 **做**：单店 B2C；Category / SPU / SKU；Cart；多行 Order；模拟 Payment；Stock 在下单时预占。
 
-**不做**：多店/商家入驻、优惠券、评价、真实物流与承运商、仓配、部分退、秒杀、SPU 历史售价、对接 Kafka / CDC。
+**不做**：多店/商家入驻、优惠券、评价、真实物流与承运商、仓配、部分退、秒杀、SPU 历史售价、CDC。Kafka 出站在后续里程碑实现，不把湖仓 JSON 当成本店表结构。
 
 v1 可以有 `SHIPPED` / `COMPLETED` 两个状态，但没有独立的发货单实体。
 
@@ -87,8 +87,8 @@ Payment 已是 `SUCCEEDED`、Order 已是 `PAID`。第二次回调不创建第�
 
 ## 与 minimart-lake
 
-湖仓第一期按一单一 SKU、Kafka `orders.events` 来写，且 Kafka 本身未定。本仓库：
+湖仓第一期按一单一 SKU、Kafka `orders.events` 消费。本仓库：
 
 - **不**把 Order 建成一单一 SKU 来迁就那份示意 JSON。
-- **不**在 v1 契约里要求必须写出湖。
-- 以后若要出站，在模块边界上做映射（一条订单变更带多行，或一行一条、湖仓改主键），见 [ADR-0001](adr/0001-oltp-independent-of-lake.md)。
+- 支付成功后在出站适配里按行拆消息，见 [LAKE-EVENTS.md](LAKE-EVENTS.md) 与 [ADR-0001](adr/0001-oltp-independent-of-lake.md)。
+- 骨架阶段 Kafka 只在 compose 中提供，应用尚未接入。

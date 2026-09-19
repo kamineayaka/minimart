@@ -1,6 +1,6 @@
 # MiniMart
 
-MiniMart 是单店 B2C 电商：购物者浏览 SKU、下单并支付。本文件只定义用语；v1 规则见 [docs/V1-CONTRACT.md](docs/V1-CONTRACT.md)，模块边界见 [docs/MODULES.md](docs/MODULES.md)。
+MiniMart 是单店 B2C 电商：购物者浏览 SKU、下单并支付。本文件只定义用语；v1 规则见 [docs/V1-CONTRACT.md](docs/V1-CONTRACT.md)，进程与所有权见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 ## Language
 
