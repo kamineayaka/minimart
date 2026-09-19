@@ -2,7 +2,7 @@
 
 本文件是 MiniMart 与 `minimart-lake` 的出站合同。OLTP 仍是多行 Order，见 [ADR-0001](adr/0001-oltp-independent-of-lake.md)。
 
-**状态：尚未实现。** 骨架阶段只在 compose 中提供 Kafka，应用未接入。
+**状态：尚未实现。** 不在本仓库 compose 中起 Kafka；接入时使用 `minimart-lake` 已有的集群。
 
 ## Topic
 

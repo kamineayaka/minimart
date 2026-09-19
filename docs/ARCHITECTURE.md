@@ -25,7 +25,7 @@ v1 是 **四个 Spring Boot 进程 + Nacos**，不是模块化单体。决策见
 | product-service | Category、SPU、SKU、Stock | 无 | 订单 |
 | order-service | Cart、Order、OrderLine、Payment | product（库存）、member（抄地址） | 直接改 Stock 表 |
 
-每服务将来一个 MySQL 库：`minimart_member` / `minimart_product` / `minimart_order`。compose 已预建，应用尚未连接。
+每服务将来一个 MySQL 库：`minimart_member` / `minimart_product` / `minimart_order`。库在**宿主机 MySQL** 上，建库脚本见 `docker/mysql/init.sql`（手工执行）。Redis 同样用裸机。应用尚未连接。Kafka 不在本 compose 中，出湖时对接 `minimart-lake` 的集群。
 
 ## 版本与 BOM
 

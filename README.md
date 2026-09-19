@@ -47,11 +47,13 @@ Windows：`Copy-Item .env.example .env` 后同样 `docker compose up -d --build`
 
 容器内访问 Nacos 用 `nacos:8848`，不要用 `127.0.0.1`。Nacos 服务列表（命名空间 `dev`）应出现四个名字。骨架阶段 Gateway **没有**业务路由。
 
-MySQL / Redis / Kafka 尚未被应用连接，需要时：
+MySQL、Redis 用**宿主机**已有实例，不进 compose。容器通过 `host.docker.internal` 访问（见 `.env.example` 的 `DB_HOST` / `REDIS_HOST`）。宿主机 MySQL 需允许该用户从 Docker 网桥访问；建库脚本在宿主机执行一次：
 
 ```bash
-docker compose --profile data up -d
+mysql -u root -p < docker/mysql/init.sql
 ```
+
+出湖 Kafka 复用 `minimart-lake` 的集群，本仓库不单独起 broker。
 
 本机不用 Docker、只编某一个服务：
 

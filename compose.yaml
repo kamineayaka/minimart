@@ -1,6 +1,21 @@
 x-spring-env: &spring-env
   NACOS_ADDR: nacos:8848
   NACOS_NS: ${NACOS_NS:-dev}
+  DB_HOST: ${DB_HOST:-host.docker.internal}
+  DB_PORT: ${DB_PORT:-3306}
+  DB_USERNAME: ${DB_USERNAME:-minimart}
+  DB_PASSWORD: ${DB_PASSWORD:-minimart}
+  REDIS_HOST: ${REDIS_HOST:-host.docker.internal}
+  REDIS_PORT: ${REDIS_PORT:-6379}
+
+x-spring-app: &spring-app
+  environment:
+    <<: *spring-env
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  depends_on:
+    - nacos
+  restart: unless-stopped
 
 services:
   nacos:
@@ -29,93 +44,29 @@ services:
       start_period: 30s
 
   gateway:
+    <<: *spring-app
     build: ./gateway
     container_name: minimart-gateway
-    environment:
-      <<: *spring-env
     ports:
       - "8080:8080"
-    depends_on:
-      - nacos
-    restart: unless-stopped
 
   member-service:
+    <<: *spring-app
     build: ./member-service
     container_name: minimart-member
-    environment:
-      <<: *spring-env
     ports:
       - "8081:8081"
-    depends_on:
-      - nacos
-    restart: unless-stopped
 
   product-service:
+    <<: *spring-app
     build: ./product-service
     container_name: minimart-product
-    environment:
-      <<: *spring-env
     ports:
       - "8082:8082"
-    depends_on:
-      - nacos
-    restart: unless-stopped
 
   order-service:
+    <<: *spring-app
     build: ./order-service
     container_name: minimart-order
-    environment:
-      <<: *spring-env
     ports:
       - "8083:8083"
-    depends_on:
-      - nacos
-    restart: unless-stopped
-
-  mysql:
-    image: mysql:8.4
-    container_name: minimart-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-minimart}
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-    profiles:
-      - data
-
-  redis:
-    image: redis:7-alpine
-    container_name: minimart-redis
-    ports:
-      - "6379:6379"
-    profiles:
-      - data
-
-  kafka:
-    image: apache/kafka:3.9.1
-    container_name: minimart-kafka
-    environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      CLUSTER_ID: MiniMartKRaftCluster01
-    ports:
-      - "9092:9092"
-    profiles:
-      - data
-
-volumes:
-  mysql-data:

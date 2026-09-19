@@ -1,3 +1,7 @@
+-- Run once on the host MySQL (not via Docker):
+--   mysql -u root -p < docker/mysql/init.sql
+-- Table migrations belong in each service's Flyway, not here.
+
 CREATE DATABASE IF NOT EXISTS minimart_member CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS minimart_product CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS minimart_order CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
