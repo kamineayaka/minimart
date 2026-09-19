@@ -20,9 +20,4 @@ dependencyResolutionManagement {
 	}
 }
 
-rootProject.name = "minimart"
-
-include("gateway")
-include("member-service")
-include("product-service")
-include("order-service")
+rootProject.name = "order-service"

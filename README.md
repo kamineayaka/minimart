@@ -17,7 +17,7 @@
 | 项 | 版本 |
 |----|------|
 | JDK | 25（toolchain，由本机/CI 的 JDK 提供，不在仓库里写安装路径） |
-| Gradle | 9.7.1 Wrapper（腾讯云镜像）。不要用 PATH 里的系统 `gradle` |
+| Gradle | 9.7.1 Wrapper，**每个服务目录一份**。不要用 PATH 里的系统 `gradle` |
 | Spring Boot | 4.1.1 |
 | Spring Framework | 7.0.9（Boot BOM） |
 | Spring Cloud | 2025.1.3 Oakwood |
@@ -25,33 +25,18 @@
 
 ## 运行
 
-必须用仓库里的 Wrapper：
+四个 Spring 服务和 Nacos 都在 Docker 里，镜像用 **JRE 25**，不占用宿主机 `JAVA_HOME`（其它业务可继续用 JDK 17）。
 
-```powershell
-.\gradlew.bat build
+```bash
+cp .env.example .env
+docker compose up -d --build
 ```
 
-基础设施：
+Windows：`Copy-Item .env.example .env` 后同样 `docker compose up -d --build`。第一次会在镜像里跑 Gradle，需要出网拉依赖。Nacos 3.x 即使关闭登录也必须有 Base64 的 `NACOS_AUTH_TOKEN`（`.env.example` 里有开发占位）。
 
-```powershell
-Copy-Item .env.example .env
-docker compose up -d nacos
-```
-
-Linux：`cp .env.example .env && docker compose up -d nacos`。Nacos 3.x 即使关闭登录也必须在 `.env` 里提供 Base64 的 `NACOS_AUTH_TOKEN`，否则容器会 `Exited (255)`。改过 `.env` 后用 `docker compose up -d --force-recreate nacos`。
-
-控制台：<http://127.0.0.1:8848/nacos>（若开启登录，默认 `nacos` / `nacos`）。
+控制台（Nacos 3.x UI）：<http://127.0.0.1:18080>（服务器用 `http://<IP>:18080`）。8848 是 OpenAPI，根路径 404 是正常的。若开启登录，默认 `nacos` / `nacos`。防火墙放行 **18080** 和 **8080**。
 
 在控制台创建一个命名空间，**ID 填 `dev`**（与 `NACOS_NS` 一致，不是显示名）。Group 使用 `MINIMART`。
-
-然后起服务（各开一个终端）：
-
-```powershell
-.\gradlew.bat :product-service:bootRun
-.\gradlew.bat :member-service:bootRun
-.\gradlew.bat :order-service:bootRun
-.\gradlew.bat :gateway:bootRun
-```
 
 | 服务 | 健康检查 |
 |------|----------|
@@ -60,12 +45,19 @@ Linux：`cp .env.example .env && docker compose up -d nacos`。Nacos 3.x 即使�
 | product-service | http://localhost:8082/actuator/health |
 | order-service | http://localhost:8083/actuator/health |
 
-Nacos 服务列表应出现上述四个名字。骨架阶段 Gateway **没有**业务路由；下一步才做 Feign / `lb://`。
+容器内访问 Nacos 用 `nacos:8848`，不要用 `127.0.0.1`。Nacos 服务列表（命名空间 `dev`）应出现四个名字。骨架阶段 Gateway **没有**业务路由。
 
-MySQL / Redis / Kafka 一并拉起（应用暂不连接）：
+MySQL / Redis / Kafka 尚未被应用连接，需要时：
 
-```powershell
-docker compose up -d
+```bash
+docker compose --profile data up -d
 ```
 
-复制 [.env.example](.env.example) 为 `.env` 可覆盖默认密码与 `NACOS_ADDR`。
+本机不用 Docker、只编某一个服务：
+
+```bash
+cd product-service
+./gradlew bootRun
+```
+
+（此时 `NACOS_ADDR=127.0.0.1:8848`，Nacos 需已在本机或 compose 里起来。）不要在仓库根目录找 `gradlew`，根目录只负责 compose 编排。

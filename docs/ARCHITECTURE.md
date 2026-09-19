@@ -38,3 +38,15 @@ v1 是 **四个 Spring Boot 进程 + Nacos**，不是模块化单体。决策见
 Framework **7.0.9** 由 Boot BOM 管理，不要手写覆盖。Java **25**，Gradle Wrapper **9.7.1**。
 
 本地配置：`application.yaml` + `spring.config.import: optional:nacos:...`。没有 `bootstrap.yml`。namespace ID 为 `dev`，group 为 `MINIMART`。
+
+部署默认走 Docker：每个服务目录是构建上下文（`build: ./product-service`），镜像为 JRE 25。容器内 `NACOS_ADDR=nacos:8848`。宿主机 JDK 版本不影响容器。
+
+## 独立构建
+
+仓在一起，工程分开。不要用根目录 `include` 把四个服务编成一次 Gradle 构建。
+
+| 共享（仅编排） | 各服务自有 |
+|----------------|------------|
+| `compose.yaml`、`.env.example`、文档 | `settings.gradle.kts`、`build.gradle.kts`、Wrapper、Dockerfile、源码 |
+
+单独编译：`cd product-service && ./gradlew bootJar`。版本号目前四处相同，漂移是独立的代价；以后若抽平台 BOM，应发布成制品，而不是再变回父工程。
