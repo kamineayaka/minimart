@@ -34,8 +34,11 @@
 基础设施：
 
 ```powershell
+Copy-Item .env.example .env
 docker compose up -d nacos
 ```
+
+Linux：`cp .env.example .env && docker compose up -d nacos`。Nacos 3.x 即使关闭登录也必须在 `.env` 里提供 Base64 的 `NACOS_AUTH_TOKEN`，否则容器会 `Exited (255)`。改过 `.env` 后用 `docker compose up -d --force-recreate nacos`。
 
 控制台：<http://127.0.0.1:8848/nacos>（若开启登录，默认 `nacos` / `nacos`）。
 

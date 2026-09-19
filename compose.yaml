@@ -7,6 +7,10 @@ services:
       PREFER_HOST_MODE: hostname
       NACOS_AUTH_ENABLE: "false"
       NACOS_AUTH_ENABLED: "false"
+      # Nacos 3.x exits 255 unless these are set, even with auth disabled.
+      NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN}
+      NACOS_AUTH_IDENTITY_KEY: ${NACOS_AUTH_IDENTITY_KEY:-serverIdentity}
+      NACOS_AUTH_IDENTITY_VALUE: ${NACOS_AUTH_IDENTITY_VALUE:-security}
     ports:
       - "8848:8848"
       - "9848:9848"
