@@ -45,28 +45,35 @@ services:
 
   gateway:
     <<: *spring-app
-    build: ./gateway
+    build: ../minimart-gateway
     container_name: minimart-gateway
     ports:
       - "8080:8080"
 
   member-service:
     <<: *spring-app
-    build: ./member-service
+    build: ../minimart-member-service
     container_name: minimart-member
     ports:
       - "8081:8081"
 
   product-service:
     <<: *spring-app
-    build: ./product-service
+    build: ../minimart-product-service
     container_name: minimart-product
     ports:
       - "8082:8082"
 
   order-service:
     <<: *spring-app
-    build: ./order-service
+    build: ../minimart-order-service
     container_name: minimart-order
     ports:
       - "8083:8083"
+
+  payment-service:
+    <<: *spring-app
+    build: ../minimart-payment-service
+    container_name: minimart-payment
+    ports:
+      - "8084:8084"

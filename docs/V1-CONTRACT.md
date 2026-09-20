@@ -6,7 +6,7 @@
 
 ## 本仓库的位置
 
-MiniMart 是 B/S 电商的系统源。`minimart-lake` 将来消费本店产生的订单变化，但 **写模型按电商常用形态设计**，不按湖仓当前的一单一 SKU 事件来压扁 Order。出湖走 Kafka，映射见 [LAKE-EVENTS.md](LAKE-EVENTS.md)（尚未实现）。部署形态见 [ADR-0005](adr/0005-spring-cloud-nacos.md)。
+MiniMart 是 B/S 电商的系统源。`minimart-lake` 将来消费本店产生的订单变化，但 **写模型按电商常用形态设计**，不按湖仓当前的一单一 SKU 事件来压扁 Order。出湖走 Kafka，映射见 [LAKE-EVENTS.md](LAKE-EVENTS.md)（尚未实现）。部署形态见 [ADR-0005](adr/0005-spring-cloud-nacos.md) / [ADR-0006](adr/0006-payment-own-process.md) / [ADR-0007](adr/0007-one-repo-per-process.md)。
 
 ## 做与不做
 
