@@ -1,6 +1,7 @@
 x-spring-env: &spring-env
   NACOS_ADDR: nacos:8848
   NACOS_NS: ${NACOS_NS:-dev}
+  SPRING_PROFILES_ACTIVE: runtime
   DB_HOST: ${DB_HOST:-host.docker.internal}
   DB_PORT: ${DB_PORT:-3306}
   DB_USERNAME: ${DB_USERNAME:-minimart}
@@ -14,8 +15,15 @@ x-spring-app: &spring-app
   extra_hosts:
     - "host.docker.internal:host-gateway"
   depends_on:
-    - nacos
+    nacos:
+      condition: service_healthy
+    nacos-config:
+      condition: service_completed_successfully
   restart: unless-stopped
+
+x-spring-build: &spring-build
+  additional_contexts:
+    infra: ../minimart-infra
 
 services:
   nacos:
@@ -43,37 +51,62 @@ services:
       retries: 12
       start_period: 30s
 
+  nacos-config:
+    image: curlimages/curl:8.12.1
+    container_name: minimart-nacos-config
+    depends_on:
+      nacos:
+        condition: service_healthy
+    environment:
+      NACOS_ADDR: nacos:8848
+      NACOS_NS: ${NACOS_NS:-dev}
+      CONFIG_DIR: /nacos-seed/config
+    volumes:
+      - ./docker/nacos:/nacos-seed:ro
+    entrypoint: ["/bin/sh", "/nacos-seed/seed-config.sh"]
+    restart: "no"
+
   gateway:
     <<: *spring-app
-    build: ../minimart-gateway
+    build:
+      context: ../minimart-gateway
+      <<: *spring-build
     container_name: minimart-gateway
     ports:
       - "8080:8080"
 
   member-service:
     <<: *spring-app
-    build: ../minimart-member-service
+    build:
+      context: ../minimart-member-service
+      <<: *spring-build
     container_name: minimart-member
     ports:
       - "8081:8081"
 
   product-service:
     <<: *spring-app
-    build: ../minimart-product-service
+    build:
+      context: ../minimart-product-service
+      <<: *spring-build
     container_name: minimart-product
     ports:
       - "8082:8082"
 
   order-service:
     <<: *spring-app
-    build: ../minimart-order-service
+    build:
+      context: ../minimart-order-service
+      <<: *spring-build
     container_name: minimart-order
     ports:
       - "8083:8083"
 
   payment-service:
     <<: *spring-app
-    build: ../minimart-payment-service
+    build:
+      context: ../minimart-payment-service
+      <<: *spring-build
     container_name: minimart-payment
     ports:
       - "8084:8084"
