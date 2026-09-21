@@ -1,0 +1,10 @@
+# Stub — full chart in P2. Mirrors k8s/config/minimart-common.yaml for ConfigMap data.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minimart-common
+  labels:
+    app.kubernetes.io/part-of: minimart
+data:
+  minimart-common.yaml: |
+    # See k8s/config/minimart-common.yaml — mount via spring.config.import or envFrom in P2.

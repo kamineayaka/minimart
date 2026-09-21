@@ -10,7 +10,7 @@ status: accepted
 
 | 制品 | 坐标 | 内容 |
 |------|------|------|
-| 平台 BOM | `com.minimart:minimart-bom:0.1.0` | 只冻结 Boot / Cloud / SCA / 测试库版本，见 [ADR-0008](0008-version-matrix.md) |
+| 平台 BOM | `com.minimart:minimart-bom:0.1.0` | 只冻结 Boot / Cloud / 测试库版本，见 [ADR-0008](0008-version-matrix.md) |
 | `minimart-api-common` | 同上 group | 错误体、幂等头、关联 ID、Feign 安全重试 / ErrorDecoder |
 | `minimart-member-api` 等 | 四个小 jar | Feign 接口与协作 DTO，匹配 [ARCHITECTURE.md](../ARCHITECTURE.md) 拓扑表 |
 

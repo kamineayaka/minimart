@@ -1,32 +1,42 @@
 # 架构
 
-v1 是 **五个 Spring Boot 进程 + Nacos**，不是模块化单体。决策见 [ADR-0005](adr/0005-spring-cloud-nacos.md)、[ADR-0006](adr/0006-payment-own-process.md)、[ADR-0007](adr/0007-one-repo-per-process.md)、[ADR-0008](adr/0008-version-matrix.md)、[ADR-0009](adr/0009-shared-bom-and-api.md)。用语见 [CONTEXT.md](../CONTEXT.md)，行为见 [V1-CONTRACT.md](V1-CONTRACT.md)。
+v1 是 **五个 Spring Boot 进程**，部署目标为 **Kubernetes**（见 [ADR-0010](adr/0010-kubernetes-runtime-target.md)、[ADR-0011](adr/0011-ingress-and-gateway.md)）。不是模块化单体。决策见 [ADR-0006](adr/0006-payment-own-process.md)、[ADR-0007](adr/0007-one-repo-per-process.md)、[ADR-0008](adr/0008-version-matrix.md)、[ADR-0009](adr/0009-shared-bom-and-api.md)。用语见 [CONTEXT.md](../CONTEXT.md)，行为见 [V1-CONTRACT.md](V1-CONTRACT.md)。
 
 ## 进程
 
 ```
-浏览器 / Apifox  →  gateway:8080
-                       │  /member /product /order /payment  →  lb://
-    ┌──────────┬───────┼───────────┬──────────┐
-    ▼          ▼       ▼           ▼          ▼
- member:8081 product:8082 order:8083  payment:8084
+Internet
+   │
+   ▼
+Ingress (TLS, host)          ← 集群边，见 ADR-0011
+   │
+   ▼
+gateway:8080                 ← JWT / CORS / correlation / 路由
+   │  /member /product /order /payment  →  http://<service>:<port>
+   ├──────────┬───────────┬──────────────┐
+   ▼          ▼           ▼              ▼
+member:8081 product:8082 order:8083  payment:8084
  User/Address Category/SPU Cart/Order  模拟 Payment
  登录 JWT     SKU/Stock
-    │          │       │           │
-    └──────────┴───────┴─────┬─────┘
-                             ▼
-                       Nacos :8848 / :9848
+   │          │       │           │
+   └──────────┴───────┴─────┬─────┘
+                            ▼
+              Feign（Cluster DNS，不经 gateway）
+                            │
+              ConfigMap / Secret（替代 Nacos）
 ```
 
-Gateway 是唯一公网入口。JWT 只在 gateway 校验（尚未实现发牌）。内部 Feign 走 `/internal/v1/**`，**不**经 gateway。Gateway 无 MySQL。CORS、关联 ID、限流只放在 gateway。
+Gateway 是唯一**应用层**公网入口（Ingress 只做 TLS/域名）。JWT 只在 gateway 校验（尚未实现发牌）。内部 Feign 走 `/internal/v1/**`，**不**经 gateway。Gateway 无 MySQL。CORS、关联 ID、限流只放在 gateway。
+
+Helm 清单位于 **`charts/minimart/`**（P2 完整 chart；当前为 config 样例 + README 占位）。
 
 ## 协作拓扑（实现门禁）
 
 在写任何用例代码之前，同步调用只能是下表。Feign 接口发布在 infra 的 `*-api` 制品里，禁止只写在调用方。
 
-| From | Sync calls（Feign + `lb://`） | Must not |
-|------|------------------------------|----------|
-| gateway | 四个服务（`lb://member-service` 等，公开前缀 `/member` `/product` `/order` `/payment`） | 拥有业务表；转发 `/internal/**` |
+| From | Sync calls（Feign + 显式 Service URL） | Must not |
+|------|----------------------------------------|----------|
+| gateway | 四个服务（`http://member-service:8081` 等，公开前缀 `/member` `/product` `/order` `/payment`） | 拥有业务表；转发 `/internal/**` |
 | member-service | 无 | 车、单、库存、支付 |
 | product-service | 无 | 订单、支付 |
 | order-service | product（reserve / confirm / release）、member（抄 Address）、payment（开单收钱） | 自己写 Stock 表；自己把单改成 `PAID` |
@@ -62,26 +72,24 @@ publisher 以后再接 `orders.events`。见 [LAKE-EVENTS.md](LAKE-EVENTS.md)、
 
 ## 版本与 BOM
 
-版本合同见 [ADR-0008](adr/0008-version-matrix.md)。各服务 **只** import `com.minimart:minimart-bom:0.1.0`，不要再各自写 Boot/Cloud/SCA 三个 BOM。BOM 在 infra `modules/minimart-bom`，不是 Gradle parent，见 [ADR-0009](adr/0009-shared-bom-and-api.md)。
+版本合同见 [ADR-0008](adr/0008-version-matrix.md)、[ADR-0010](adr/0010-kubernetes-runtime-target.md)。各服务 **只** import `com.minimart:minimart-bom:0.1.0`，不要再各自写 Boot/Cloud BOM。BOM 在 infra `modules/minimart-bom`，不是 Gradle parent，见 [ADR-0009](adr/0009-shared-bom-and-api.md)。
 
-`minimart-bom` 内部导入顺序：Boot **4.0.8** → Cloud **2025.1.0** → SCA **2025.1.0.0**（SCA 在 Cloud 相关 import 中最后）。compatibility-verifier **打开**。Nacos 客户端只用 SCA BOM 里的版本。
+`minimart-bom` 内部导入顺序：Boot **4.0.8** → Cloud **2025.1.0**（**无** Spring Cloud Alibaba）。compatibility-verifier **打开**。
 
 Java **25**，Gradle Wrapper **9.7.1**。Framework 由 Boot BOM 管理。
 
 发布：在 minimart-infra 执行 `./gradlew publishToMavenLocal`。并列 clone 时服务仓 `includeBuild("../minimart-infra")`。Compose 构建通过 `additional_contexts.infra` 把本仓交给各服务 Dockerfile。
 
-## Nacos
+## 配置（ConfigMap / Secret，替代 Nacos）
 
-Namespace ID **`dev`**，group **`MINIMART`**。没有 `bootstrap.yml`。
+| 内容 | 载体 |
+|------|------|
+| Jackson、Feign 超时、日志 pattern | ConfigMap `minimart-common`（样例：`k8s/config/minimart-common.yaml`） |
+| `server.port`、datasource URL | 各应用 ConfigMap + Secret（样例：`k8s/config/<app>.yaml`） |
+| Feign 目标 URL | order/payment 的 ConfigMap 或 `application.yaml` |
+| 按环境 | Helm `values*.yaml`（P2，`charts/minimart/`） |
 
-| data-id | 内容 |
-|---------|------|
-| `minimart-common.yaml` | Jackson、actuator、日志（含 correlationId）、loadbalancer、Feign 超时、verifier |
-| `<spring.application.name>.yaml` | `server.port`、（四服务）datasource URL |
-
-本机 `bootRun`（无 Nacos 也可起）：`spring.config.import` 使用 **`optional:nacos:...`**。
-
-Compose / 运行时 profile **`runtime`**：`SPRING_PROFILES_ACTIVE=runtime`，import **没有** `optional:`，缺文件则进程失败。compose 里 `nacos-config` 一次性把 `docker/nacos/config/` 写入 Nacos。
+各服务 `application.yaml` 已内嵌公共配置；`k8s/config/` 提供与旧 Nacos data-id 等价的 ConfigMap-ready 样例。本地 `./gradlew bootRun` 不依赖外部配置中心。Compose 使用同一套应用配置，Docker 网络 DNS 名与 K8s Service 名一致。
 
 ## 独立构建
 
@@ -89,6 +97,6 @@ Compose / 运行时 profile **`runtime`**：`SPRING_PROFILES_ACTIVE=runtime`，i
 
 | 共享（minimart-infra） | 各服务仓自有 |
 |------------------------|--------------|
-| `compose.yaml`、`.env.example`、`docker/`、文档、`CONTEXT.md`、`modules/`（BOM + API） | `settings.gradle.kts`、`build.gradle.kts`、Wrapper、Dockerfile、源码 |
+| `compose.yaml`、`.env.example`、`docker/`、`k8s/config/`、`charts/`、文档、`CONTEXT.md`、`modules/`（BOM + API） | `settings.gradle.kts`、`build.gradle.kts`、Wrapper、Dockerfile、源码 |
 
 单独编译：`cd ../minimart-product-service && ./gradlew bootJar`。

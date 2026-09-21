@@ -1,8 +1,6 @@
 spring:
   jackson:
     default-property-inclusion: non_null
-    serialization:
-      write-dates-as-timestamps: false
   cloud:
     compatibility-verifier:
       enabled: true
@@ -13,9 +11,6 @@ spring:
             connectTimeout: 2000
             readTimeout: 5000
             loggerLevel: basic
-    loadbalancer:
-      health-check:
-        refetch-instances: true
 
 management:
   endpoints:
