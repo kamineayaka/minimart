@@ -1,0 +1,77 @@
+# Kind / local overlay. TLS stays off. MySQL stays on the host (or another external endpoint).
+# JDBC URLs with this host (password still comes from Secret minimart-db, value "placeholder"):
+#   jdbc:mysql://host.docker.internal:3306/minimart_member?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+#   jdbc:mysql://host.docker.internal:3306/minimart_product?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+#   jdbc:mysql://host.docker.internal:3306/minimart_order?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+#   jdbc:mysql://host.docker.internal:3306/minimart_payment?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+# Host init.sql creates user minimart / password minimart. Point the Secret at that password
+# only on your machine: --set mysql.password=minimart
+# Do not commit a real password.
+
+global:
+  imageRegistry: ghcr.io/kamineayaka
+  # IfNotPresent so `kind load docker-image` works. Use Always when :main must be re-pulled.
+  imagePullPolicy: IfNotPresent
+
+mysql:
+  host: host.docker.internal
+  port: 3306
+  username: minimart
+  password: placeholder
+
+gateway:
+  image:
+    repository: minimart-gateway
+    tag: "main"
+
+memberService:
+  image:
+    repository: minimart-member-service
+    tag: "main"
+
+productService:
+  image:
+    repository: minimart-product-service
+    tag: "main"
+
+orderService:
+  image:
+    repository: minimart-order-service
+    tag: "main"
+
+paymentService:
+  image:
+    repository: minimart-payment-service
+    tag: "main"
+
+# Same-namespace DNS, explicit so a dev overlay review shows the Feign/Gateway targets.
+services:
+  member:
+    host: member-service
+    port: 8081
+  product:
+    host: product-service
+    port: 8082
+  order:
+    host: order-service
+    port: 8083
+  payment:
+    host: payment-service
+    port: 8084
+
+ingress:
+  enabled: true
+  className: nginx
+  host: api.minimart.local
+  tls: false
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
+nacos:
+  enabled: false
+kafka:
+  enabled: false
+lake:
+  enabled: false
+redis:
+  enabled: false

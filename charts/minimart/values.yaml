@@ -1,0 +1,126 @@
+# Default values for the MiniMart umbrella chart.
+# MySQL is external. This chart does not deploy MySQL, Nacos, Kafka, lake, or Redis.
+# Feign and Gateway use same-namespace Service DNS (http://product-service:8082, …).
+
+global:
+  imageRegistry: ghcr.io/kamineayaka
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+# Documented cluster DNS. Apps read these via MINIMART_SERVICES_* and mounted application.yaml.
+services:
+  member:
+    host: member-service
+    port: 8081
+  product:
+    host: product-service
+    port: 8082
+  order:
+    host: order-service
+    port: 8083
+  payment:
+    host: payment-service
+    port: 8084
+
+# External MySQL (not deployed). Password is a placeholder rendered into Secret minimart-db.
+# Replace it at install time: --set mysql.password=...  (do not commit a real password).
+# JDBC URLs (password is NOT embedded; pods use DB_PASSWORD from the Secret):
+#   jdbc:mysql://mysql.example.invalid:3306/minimart_member?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+#   jdbc:mysql://mysql.example.invalid:3306/minimart_product?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+#   jdbc:mysql://mysql.example.invalid:3306/minimart_order?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+#   jdbc:mysql://mysql.example.invalid:3306/minimart_payment?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+mysql:
+  host: mysql.example.invalid
+  port: 3306
+  username: minimart
+  password: placeholder
+  jdbcParams: "useUnicode=true&characterEncoding=utf8&serverTimezone=UTC"
+
+# Placeholder only. Gateway does not read this secret yet (JWT issuance is not implemented).
+jwt:
+  secret: placeholder-not-a-real-jwt-key
+
+gateway:
+  replicaCount: 1
+  image:
+    repository: minimart-gateway
+    tag: "main"
+  service:
+    port: 8080
+
+memberService:
+  replicaCount: 1
+  image:
+    repository: minimart-member-service
+    tag: "main"
+  service:
+    port: 8081
+  database: minimart_member
+
+productService:
+  replicaCount: 1
+  image:
+    repository: minimart-product-service
+    tag: "main"
+  service:
+    port: 8082
+  database: minimart_product
+
+orderService:
+  replicaCount: 1
+  image:
+    repository: minimart-order-service
+    tag: "main"
+  service:
+    port: 8083
+  database: minimart_order
+
+paymentService:
+  replicaCount: 1
+  image:
+    repository: minimart-payment-service
+    tag: "main"
+  service:
+    port: 8084
+  database: minimart_payment
+
+ingress:
+  enabled: true
+  className: ""
+  # Documented public host. values-dev.yaml sets api.minimart.local and tls: false.
+  host: api.shop.example
+  tls: false
+  tlsSecretName: minimart-gateway-tls
+  annotations: {}
+
+probes:
+  path: /actuator/health
+  startup:
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 30
+  readiness:
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  liveness:
+    periodSeconds: 20
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    memory: 1Gi
+
+# Flags default false. This chart has no manifests for these workloads.
+nacos:
+  enabled: false
+kafka:
+  enabled: false
+lake:
+  enabled: false
+redis:
+  enabled: false

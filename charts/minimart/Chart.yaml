@@ -1,0 +1,13 @@
+apiVersion: v2
+name: minimart
+description: MiniMart OLTP umbrella chart — Ingress, Spring Cloud Gateway, and four services. MySQL stays outside the cluster.
+type: application
+version: 0.1.0
+appVersion: "main"
+kubeVersion: ">=1.27.0-0"
+home: https://github.com/kamineayaka/minimart-infra
+keywords:
+  - minimart
+  - gateway
+sources:
+  - https://github.com/kamineayaka/minimart-infra
