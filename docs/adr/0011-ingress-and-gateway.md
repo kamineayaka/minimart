@@ -33,6 +33,6 @@ status: accepted
 | Jackson、Feign 超时、日志 pattern | ConfigMap `minimart-common`（样例见 `k8s/config/`） |
 | datasource URL、端口 | ConfigMap + Secret |
 | JWT 密钥 | Secret |
-| 按环境 dev/staging/prod | Helm `values*.yaml`（P2） |
+| 按环境 dev/staging/prod | Helm `charts/minimart/values.yaml` 与 `values-dev.yaml` |
 
 Ingress 只指向 `gateway` Service；四个业务 Service 不对公网 Ingress 暴露。

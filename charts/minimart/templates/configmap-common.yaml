@@ -1,10 +1,10 @@
-# Stub — full chart in P2. Mirrors k8s/config/minimart-common.yaml for ConfigMap data.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: minimart-common
   labels:
-    app.kubernetes.io/part-of: minimart
+    {{- include "minimart.labels" (dict "ctx" . "name" "minimart-common") | nindent 4 }}
 data:
+  # Mirrors k8s/config/minimart-common.yaml (Jackson, Feign timeouts, health, log pattern).
   minimart-common.yaml: |
-    # See k8s/config/minimart-common.yaml — mount via spring.config.import or envFrom in P2.
+{{ .Files.Get "files/minimart-common.yaml" | indent 4 }}

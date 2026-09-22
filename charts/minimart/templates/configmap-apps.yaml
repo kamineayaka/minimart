@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  labels:
+    {{- include "minimart.labels" (dict "ctx" . "name" "gateway") | nindent 4 }}
+data:
+  application.yaml: |
+{{ include "minimart.appConfig.gateway" . | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: member-service-config
+  labels:
+    {{- include "minimart.labels" (dict "ctx" . "name" "member-service") | nindent 4 }}
+data:
+  application.yaml: |
+{{ include "minimart.appConfig.member-service" . | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: product-service-config
+  labels:
+    {{- include "minimart.labels" (dict "ctx" . "name" "product-service") | nindent 4 }}
+data:
+  application.yaml: |
+{{ include "minimart.appConfig.product-service" . | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: order-service-config
+  labels:
+    {{- include "minimart.labels" (dict "ctx" . "name" "order-service") | nindent 4 }}
+data:
+  application.yaml: |
+{{ include "minimart.appConfig.order-service" . | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-service-config
+  labels:
+    {{- include "minimart.labels" (dict "ctx" . "name" "payment-service") | nindent 4 }}
+data:
+  application.yaml: |
+{{ include "minimart.appConfig.payment-service" . | indent 4 }}

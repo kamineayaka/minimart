@@ -1,0 +1,1 @@
+{{- include "minimart.deployment" (dict "ctx" . "name" "payment-service" "spec" .Values.paymentService) }}

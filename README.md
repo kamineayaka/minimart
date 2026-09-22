@@ -60,8 +60,6 @@ Windows：`Copy-Item .env.example .env` 后同样 `docker compose up -d --build`
 
 Compose **不会**起 MySQL / Redis / Kafka。Kafka 属于 lake；OLTP 不依赖 lake。配置在各服务 `application.yaml` 内；K8s 样例见 `k8s/config/`。
 
-**长期目标：** `helm install` 使用 `charts/minimart/`（P2 完整 chart；当前为 README + ConfigMap 样例）。Compose 标注为过渡本地联调，避免与集群双轨。
-
 | 服务 | 仓 | 健康检查 | 公开前缀 |
 |------|----|----------|----------|
 | gateway | minimart-gateway | http://localhost:8080/actuator/health | `/member` `/product` `/order` `/payment` → `http://<service>:<port>` |
@@ -81,3 +79,16 @@ mysql -u root -p < docker/mysql/init.sql
 出湖 Kafka 复用 `minimart-lake` 的集群，本仓库不单独起 broker。
 
 本机不用 Docker、只编某一个服务：进入对应服务仓后 `./gradlew bootRun`。不要在本仓根目录找服务的 `bootRun`；本仓 `./gradlew` 只构建 BOM / API。
+
+## Kubernetes（Helm）
+
+Chart 在 `charts/minimart/`（Ingress → gateway，五个 Deployment/Service，ConfigMap `minimart-common`，数据库密码 Secret 占位）。**不**部署 MySQL、Nacos、Kafka、lake、Redis。本地 kind 仍是 P3；脚本在 `k8s/kind/`，没有 Docker/kind 时不必跑。
+
+在本仓根目录：
+
+```bash
+helm template minimart charts/minimart -f charts/minimart/values-dev.yaml
+helm lint charts/minimart -f charts/minimart/values-dev.yaml
+```
+
+说明见 [charts/minimart/README.md](charts/minimart/README.md)。Compose 仍是过渡本地联调，避免与集群双轨。

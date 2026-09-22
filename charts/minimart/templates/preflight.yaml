@@ -1,0 +1,3 @@
+{{- if or .Values.nacos.enabled .Values.kafka.enabled .Values.lake.enabled .Values.redis.enabled }}
+{{- fail "This chart does not deploy Nacos, Kafka, lake, or Redis. Leave nacos.enabled, kafka.enabled, lake.enabled, and redis.enabled false." }}
+{{- end }}

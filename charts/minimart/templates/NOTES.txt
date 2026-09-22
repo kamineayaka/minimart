@@ -1,0 +1,19 @@
+MiniMart release {{ .Release.Name }} renders five Deployments (gateway, member, product, order, payment).
+Ingress host: {{ .Values.ingress.host }} (tls={{ .Values.ingress.tls }}) → Service/gateway:{{ .Values.gateway.service.port }} only.
+
+Images: {{ .Values.global.imageRegistry }}/minimart-gateway:{{ .Values.gateway.image.tag }} (and the four service repos, tag {{ .Values.memberService.image.tag }}).
+
+External MySQL (this chart does not deploy a database):
+  member:  {{ include "minimart.jdbcUrl" (dict "ctx" . "database" .Values.memberService.database) }}
+  product: {{ include "minimart.jdbcUrl" (dict "ctx" . "database" .Values.productService.database) }}
+  order:   {{ include "minimart.jdbcUrl" (dict "ctx" . "database" .Values.orderService.database) }}
+  payment: {{ include "minimart.jdbcUrl" (dict "ctx" . "database" .Values.paymentService.database) }}
+Password is Secret/minimart-db key "password" (placeholder unless you --set mysql.password).
+
+Feign / Gateway targets:
+  member:  {{ include "minimart.serviceUrl" .Values.services.member }}
+  product: {{ include "minimart.serviceUrl" .Values.services.product }}
+  order:   {{ include "minimart.serviceUrl" .Values.services.order }}
+  payment: {{ include "minimart.serviceUrl" .Values.services.payment }}
+
+Nacos, Kafka, lake, and Redis are not deployed.

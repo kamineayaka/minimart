@@ -28,7 +28,7 @@ member:8081 product:8082 order:8083  payment:8084
 
 Gateway 是唯一**应用层**公网入口（Ingress 只做 TLS/域名）。JWT 只在 gateway 校验（尚未实现发牌）。内部 Feign 走 `/internal/v1/**`，**不**经 gateway。Gateway 无 MySQL。CORS、关联 ID、限流只放在 gateway。
 
-Helm 清单位于 **`charts/minimart/`**（P2 完整 chart；当前为 config 样例 + README 占位）。
+Helm chart 已在 **`charts/minimart/`**（P2 已落地：五 Deployment/Service、Ingress 只进 gateway、ConfigMap `minimart-common`、外部 MySQL 的 Secret 占位）。本地 kind 安装仍是 **P3**（`k8s/kind/dev-up.sh` 只是可选脚本）。
 
 ## 协作拓扑（实现门禁）
 
@@ -87,7 +87,7 @@ Java **25**，Gradle Wrapper **9.7.1**。Framework 由 Boot BOM 管理。
 | Jackson、Feign 超时、日志 pattern | ConfigMap `minimart-common`（样例：`k8s/config/minimart-common.yaml`） |
 | `server.port`、datasource URL | 各应用 ConfigMap + Secret（样例：`k8s/config/<app>.yaml`） |
 | Feign 目标 URL | order/payment 的 ConfigMap 或 `application.yaml` |
-| 按环境 | Helm `values*.yaml`（P2，`charts/minimart/`） |
+| 按环境 | Helm `charts/minimart/values.yaml` 与 `values-dev.yaml`（P2 已落地；P3 kind 仍在后面） |
 
 各服务 `application.yaml` 已内嵌公共配置；`k8s/config/` 提供与旧 Nacos data-id 等价的 ConfigMap-ready 样例。本地 `./gradlew bootRun` 不依赖外部配置中心。Compose 使用同一套应用配置，Docker 网络 DNS 名与 K8s Service 名一致。
 

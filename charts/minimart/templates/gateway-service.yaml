@@ -1,0 +1,1 @@
+{{- include "minimart.service" (dict "ctx" . "name" "gateway" "spec" .Values.gateway) }}
