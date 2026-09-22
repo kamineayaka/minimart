@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+minimart:
+  services:
+    member:
+      host: member-service
+      port: 8081
+    product:
+      host: product-service
+      port: 8082
+    order:
+      host: order-service
+      port: 8083
+    payment:
+      host: payment-service
+      port: 8084
+  gateway:
+    rate-limit:
+      enabled: true
+      permits-per-second: 100
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: member-service
+              uri: http://${minimart.services.member.host}:${minimart.services.member.port}
+              predicates:
+                - Path=/member/**
+              filters:
+                - StripPrefix=1
+            - id: product-service
+              uri: http://${minimart.services.product.host}:${minimart.services.product.port}
+              predicates:
+                - Path=/product/**
+              filters:
+                - StripPrefix=1
+            - id: order-service
+              uri: http://${minimart.services.order.host}:${minimart.services.order.port}
+              predicates:
+                - Path=/order/**
+              filters:
+                - StripPrefix=1
+            - id: payment-service
+              uri: http://${minimart.services.payment.host}:${minimart.services.payment.port}
+              predicates:
+                - Path=/payment/**
+              filters:
+                - StripPrefix=1

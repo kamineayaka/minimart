@@ -8,10 +8,9 @@ javaPlatform {
 }
 
 dependencies {
-	// Boot first; Cloud after Boot; SCA last among Cloud imports (ADR-0008).
+	// Boot first; Cloud after Boot (ADR-0008, ADR-0010 — no Spring Cloud Alibaba).
 	api(platform("org.springframework.boot:spring-boot-dependencies:4.0.8"))
 	api(platform("org.springframework.cloud:spring-cloud-dependencies:2025.1.0"))
-	api(platform("com.alibaba.cloud:spring-cloud-alibaba-dependencies:2025.1.0.0"))
 
 	constraints {
 		api("com.minimart:minimart-api-common:0.1.0")

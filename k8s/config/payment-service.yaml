@@ -6,3 +6,9 @@ spring:
     url: jdbc:mysql://${DB_HOST:host.docker.internal}:${DB_PORT:3306}/minimart_payment?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
     username: ${DB_USERNAME:minimart}
     password: ${DB_PASSWORD:minimart}
+  cloud:
+    openfeign:
+      client:
+        config:
+          order-service:
+            url: http://order-service:8083

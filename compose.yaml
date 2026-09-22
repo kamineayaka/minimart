@@ -1,7 +1,4 @@
 x-spring-env: &spring-env
-  NACOS_ADDR: nacos:8848
-  NACOS_NS: ${NACOS_NS:-dev}
-  SPRING_PROFILES_ACTIVE: runtime
   DB_HOST: ${DB_HOST:-host.docker.internal}
   DB_PORT: ${DB_PORT:-3306}
   DB_USERNAME: ${DB_USERNAME:-minimart}
@@ -14,58 +11,19 @@ x-spring-app: &spring-app
     <<: *spring-env
   extra_hosts:
     - "host.docker.internal:host-gateway"
-  depends_on:
-    nacos:
-      condition: service_healthy
-    nacos-config:
-      condition: service_completed_successfully
+  networks:
+    - minimart
   restart: unless-stopped
 
 x-spring-build: &spring-build
   additional_contexts:
     infra: ../minimart-infra
 
+networks:
+  minimart:
+    name: minimart
+
 services:
-  nacos:
-    image: nacos/nacos-server:v3.1.1
-    container_name: minimart-nacos
-    hostname: nacos
-    environment:
-      MODE: standalone
-      PREFER_HOST_MODE: hostname
-      NACOS_AUTH_ENABLE: "false"
-      NACOS_AUTH_ENABLED: "false"
-      # Nacos 3.x exits 255 unless these are set, even with auth disabled.
-      NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN:-TWluaU1hcnREZXZOYWNvc0F1dGhUb2tlbktleTMyQiEh}
-      NACOS_AUTH_IDENTITY_KEY: ${NACOS_AUTH_IDENTITY_KEY:-serverIdentity}
-      NACOS_AUTH_IDENTITY_VALUE: ${NACOS_AUTH_IDENTITY_VALUE:-security}
-    ports:
-      - "8848:8848"
-      - "9848:9848"
-      # Console UI (Nacos 3.x). Not 8080 on the host — that port is for gateway.
-      - "18080:8080"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 30s
-
-  nacos-config:
-    image: curlimages/curl:8.12.1
-    container_name: minimart-nacos-config
-    depends_on:
-      nacos:
-        condition: service_healthy
-    environment:
-      NACOS_ADDR: nacos:8848
-      NACOS_NS: ${NACOS_NS:-dev}
-      CONFIG_DIR: /nacos-seed/config
-    volumes:
-      - ./docker/nacos:/nacos-seed:ro
-    entrypoint: ["/bin/sh", "/nacos-seed/seed-config.sh"]
-    restart: "no"
-
   gateway:
     <<: *spring-app
     build:
